@@ -215,9 +215,11 @@ class GetOrderDetail(Action):
         # 2.3 拼接最近物流信息，标题：最近物流信息，内容：物流信息
         logistics = order_info.logistics
         if logistics:
-            message.append("- **最近物流信息**：")
-            # 对logistics表的logistics_tracking字段取最后一条信息
-            message.append(f"  - {logistics[0].logistics_tracking.splitlines()[-1]}")
+            latest_tracking = logistics[0].logistics_tracking
+            if latest_tracking:
+                message.append("- **最近物流信息**：")
+                # 对logistics表的logistics_tracking字段取最后一条信息
+                message.append(f"  - {latest_tracking.splitlines()[-1]}")
 
         # 3、发送拼接结果的message给用户
         dispatcher.utter_message(text="\n".join(message))
@@ -288,12 +290,14 @@ class GetOrderDetail(Action):
                     postsale.logistics, key=lambda x: x.create_time, reverse=True
                 )
                 # 拼接标题：最新物流信息
-                message.append("- **最近物流信息**：")
-                # 拼接最新物流信息
-                message.append(
-                    # 前面已经排序，取索引0即最新的物流信息。然后切分该条物流的tracking，取最后一个信息
-                    f"  - {postsale.logistics[0].logistics_tracking.splitlines()[-1]}"
-                )
+                latest_tracking = postsale.logistics[0].logistics_tracking
+                if latest_tracking:
+                    message.append("- **最近物流信息**：")
+                    # 拼接最新物流信息
+                    message.append(
+                        # 前面已经排序，取索引0即最新的物流信息。然后切分该条物流的tracking，取最后一个信息
+                        f"  - {latest_tracking.splitlines()[-1]}"
+                    )
             # 发送拼接好的售后信息
             dispatcher.utter_message(text="\n".join(message))
         return []

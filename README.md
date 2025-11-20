@@ -250,12 +250,22 @@ flowchart TD
 - **EnterpriseSearchPolicy**：当 Flow 需要知识检索/问答时进入 GraphRAG；执行入口节点检索、向量+全文检索、Cypher 生成/校验，再查 Neo4j，结果回填 Tracker。
 - **Action Server**：需要业务数据/写库时通过 HTTP webhook 调用自定义 actions（MySQL 查询/更新等），结果回填 Tracker。
 - **Tracker / NLG**：所有事件、槽位存 Tracker；最终用 NLG/Rephraser 生成回复，经 Socket.IO/REST 返回前端。同一次对话的上下文都留存在 Tracker 中，后续预测依赖这些历史。
+- **过滤标记（如 `goto` 槽）**：Flow 可以先用 `set_slots` 写入一个标记（例如 `goto: action_ask_order_id_before_completed_3_days`），下游 Action（如 `action_ask_order_id`）读取该槽决定查询/过滤逻辑，再把结果（或未命中时的 `order_id=false`）回填到 Tracker，用于后续分支判断。
+- **Rasa 命名约定（`collect` → `action_ask_<slot>`）**：当 Flow 使用 `collect: order_id` 时，会查找同名的询问方式。若 domain 中注册了 `action_ask_order_id`（即自定义 Action 名为 `action_ask_<slot>`），FlowPolicy 会自动调用它获取槽值；若不存在，则回退到 `utter_ask_order_id`，再没有就直接等待用户输入。项目里 order_id 采用该约定，所以虽未在 Flow 写出 action 名，也会执行 `action_ask_order_id`。
 
 - 若 LLM/API Key、嵌入服务或 Neo4j 未正确配置，`EnterpriseSearchPolicy` 会抛错并触发 `pattern_internal_error` Flow，用户看到的就是 “Sorry, I am having trouble with that...” 的兜底提示。请确保 `.env` 中的 `API_KEY` 为真实可用值、Neo4j 和嵌入服务已启动。
 
 5. **REST 调试**
 
    使用 `POST /webhooks/rest/webhook` 或 Rasa Pro UI (`http://localhost:5002`) 与机器人对话。
+
+### 示例：order_id 收集与回显的完整交互流
+
+1. Flow 下发过滤标记：`flow_order.yml` 在 `query_order_detail` 开头 `set_slots: goto: action_ask_order_id_before_completed_3_days`，为查询设置过滤模式。
+2. Flow 收集槽：`collect: order_id` 触发命名约定 `action_ask_order_id`（在 `domain/domain_order.yml` 注册，槽 `order_id` 映射为 controlled），这是 Rasa 官方 `collect → action_ask_<slot>` 规则。
+3. Action 查询并回显：`actions/action_order.py` 的 `AskOrderID.run()` 读取 Tracker 中的 `user_id/goto`，通过 `SessionLocal` 查询 MySQL 的 `OrderInfo`/`OrderStatus`，生成按钮（`/SetSlots(order_id=...)`），用 `dispatcher.utter_message` 返回给前端，这一步就是数据“回显”。
+4. 槽回填与分支：用户点按钮后，`order_id` 槽被写入 Tracker；若查无订单，Action 会设置 `order_id="false"`。Flow 用 `if: slots.order_id != "false"` 决定是否继续。
+5. 详情查询与回复：后续步骤 `action_get_order_detail` 读取槽 `order_id`，联查明细/物流等并拼装文本；最终经 NLG/Rephraser 生成回复返回前端。整个对话上下文保存在 Tracker，供后续步骤和策略使用。
 
 ## 业务流程速览
 
