@@ -1,0 +1,25 @@
+# Core assistant stack
+rasa-pro
+rasa-sdk
+
+# Retrieval / LLM tooling
+langchain-core>=0.3.0,<0.4.0
+langchain-community>=0.3.0,<0.4.0
+neo4j
+neo4j-graphrag
+dashscope
+
+# Embeddings & NLP
+sentence-transformers
+jieba
+faker
+
+# Services & config
+fastapi
+uvicorn
+pydantic
+python-dotenv
+
+# Database tooling
+sqlalchemy
+pymysql

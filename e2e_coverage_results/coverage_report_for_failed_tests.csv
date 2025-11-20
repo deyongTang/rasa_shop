@@ -1,0 +1,10 @@
+Flow Name,Coverage,Num Steps,Missing Steps,Line Numbers for Missing Steps
+data\flows\flow_logistics.yml::查询支持的快递公司,0.0,1,1,[7-9]
+data\flows\flow_logistics.yml::查询进行中订单的物流信息,0.0,2,2,"[16-25, 20-21]"
+data\flows\flow_logistics.yml::投诉物流,0.0,6,6,"[37-38, 46-47, 50-51, 39-129, 43-45, 32-36]"
+data\flows\flow_order.yml::切换账号,0.0,1,1,[9-14]
+data\flows\flow_order.yml::查询订单详情,0.0,2,2,"[25-26, 21-30]"
+data\flows\flow_order.yml::修改订单收货信息,23.076923076923077,13,10,"[83-92, 51-82, 99-100, 69-70, 57-60, 71-72, 63-66, 75-79, 93-104, 73-74]"
+data\flows\flow_order.yml::取消订单,75.0,4,1,[122-123]
+data\flows\flow_postsale.yml::售后处理,28.57142857142857,7,5,"[18-22, 42-47, 36-38, 23-29, 30-41]"
+Total,22.22%,36,28,

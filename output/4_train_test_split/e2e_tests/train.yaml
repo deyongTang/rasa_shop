@@ -1,0 +1,37 @@
+fixtures: []
+metadata: []
+stub_custom_actions: {}
+test_cases:
+- test_case: mIwEYkJvEimdv_u_AAAB
+  steps:
+  - user: "切换用户1002"
+  - utter: utter_can_do_something_else
+  - user: "有哪些快递？"
+  - bot: "支持的快递有:\n- 中通\n- 圆通\n- 申通\n- 邮政\n- 韵达\n- 顺丰"
+  - utter: utter_can_do_something_else
+
+
+- test_case: CEJIg_H9xwh3fVejAAAD
+  steps:
+  - user: "切换用户1002"
+  - utter: utter_can_do_something_else
+  - user: "查询物流"
+  - bot: "支持的快递有:\n- 中通\n- 圆通\n- 申通\n- 邮政\n- 韵达\n- 顺丰"
+  - utter: utter_can_do_something_else
+  - user: "查询物流信息"
+  - bot: "请选择订单"
+  - user: "/SetSlots(order_id=ord1fb9104693ca44cf)"
+  - bot: "- **订单ID**：ord1fb9104693ca44cf\n  - 心理学入门 × 1\n- **物流ID**：lgt1d8fe15a6125402b\n- **物流信息**：\n  - 2025-08-15 06:39:47 台湾省台中市西屯区 已揽收\n  - 2025-08-15 06:57:27 离开 台湾省台中市西屯区，发往 广东省肇庆市\n  - 2025-08-15 10:47:01 到达 广东省肇庆市\n  - 2025-08-15 11:09:00 离开 广东省肇庆市，发往 河北省廊坊市"
+  - utter: utter_can_do_something_else
+
+
+- test_case: XhnLT8IBmouA_jTOAAAH
+  steps:
+  - user: "切换用户1002"
+  - utter: utter_can_do_something_else
+  - user: "帮我看下订单"
+  - bot: "请选择订单"
+  - user: "/SetSlots(order_id=ord380932be81b8473d)"
+  - bot: "- [待发货]**订单ID**：ord380932be81b8473d\n  - 创建时间：2025-08-25 05:05:31\n  - 支付时间：2025-08-25 05:14:57\n- **订单明细**：\n  - 投影仪 × 1 |                 1599.00-1388.68=210.32\n  - **合计**：1599.0-1388.68=210.32\n- **收货信息**：\n  - 收货人：詹燕\n  - 联系电话：13395990373\n  - 收货地址：安徽省                淮北市                相山区                张街r座"
+  - utter: utter_can_do_something_else
+

@@ -1,0 +1,38 @@
+conversations:
+- original_test_case: e2e_tests\e2e_test.yml::XhnLT8IBmouA_jTOAAAH
+  steps:
+  - user: 切换用户1002
+    llm_commands:
+    - start flow switch_user_id
+    - set slot user_id 1002
+    passing_rephrasings:
+    - 请切换到用户1002。
+    - 我需要切换到用户1002。
+    - 能不能换成用户1002？
+    - 请帮我切换成用户1002。
+    - 换成用户1002可以吗？
+    - 我想切换到用户1002。
+    - 请将当前用户更改为1002。
+    - 用户切换到1002。
+    - 请把账号切换为1002。
+    - 我需要切换用户为1002。
+  - utter: utter_can_do_something_else
+  - user: 帮我看下订单
+    llm_commands:
+    - start flow query_order_detail
+    passing_rephrasings:
+    - 请帮我查看一下订单。
+    - 请帮我查一下订单信息。
+    - 帮我看看订单情况。
+    - 我想确认一下订单内容。
+    - 能否帮我看一下订单？
+    - 请帮我检查一下订单详情。
+    - 请帮忙查看订单状态。
+    - 我需要看一下订单的信息。
+    - 请帮我查阅一下这个订单。
+    failing_rephrasings:
+    - 可以看看我的订单吗？
+  - bot: 请选择订单
+  - user: /SetSlots(order_id=ord380932be81b8473d)
+  - bot: "- [待发货]**订单ID**：ord380932be81b8473d\n  - 创建时间：2025-08-25 05:05:31\n  - 支付时间：2025-08-25 05:14:57\n- **订单明细**：\n  - 投影仪 × 1 |                 1599.00-1388.68=210.32\n  - **合计**：1599.0-1388.68=210.32\n- **收货信息**：\n  - 收货人：詹燕\n  - 联系电话：13395990373\n  - 收货地址：安徽省                淮北市                相山区                张街r座"
+  - utter: utter_can_do_something_else

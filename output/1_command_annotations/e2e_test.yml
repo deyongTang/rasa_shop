@@ -1,0 +1,15 @@
+conversations:
+- original_test_case: e2e_tests\e2e_test.yml::XhnLT8IBmouA_jTOAAAH
+  steps:
+  - user: 切换用户1002
+    llm_commands:
+    - start flow switch_user_id
+    - set slot user_id 1002
+  - utter: utter_can_do_something_else
+  - user: 帮我看下订单
+    llm_commands:
+    - start flow query_order_detail
+  - bot: 请选择订单
+  - user: /SetSlots(order_id=ord380932be81b8473d)
+  - bot: "- [待发货]**订单ID**：ord380932be81b8473d\n  - 创建时间：2025-08-25 05:05:31\n  - 支付时间：2025-08-25 05:14:57\n- **订单明细**：\n  - 投影仪 × 1 |                 1599.00-1388.68=210.32\n  - **合计**：1599.0-1388.68=210.32\n- **收货信息**：\n  - 收货人：詹燕\n  - 联系电话：13395990373\n  - 收货地址：安徽省                淮北市                相山区                张街r座"
+  - utter: utter_can_do_something_else

@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Environments
+.venv/
+venv/
+env/
+*.egg-info/
+.Python
+
+# Secrets
+.env
+
+# IDE/Editor
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Rasa cache
+.rasa/
+
+# Local models (large artifacts)
+models/bge-base-zh-v1.5/
+
+# Logs and misc
+*.log
+*.tmp
+*.pid
