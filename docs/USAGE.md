@@ -107,9 +107,9 @@ python -m http.server 8000
 
 ```mermaid
 flowchart LR
-  C[WebChat / REST] -->|Socket.IO / HTTP| S[主服务\nFlowPolicy]
-  S -->|检索 / 图查询| G[EnterpriseSearchPolicy\n(GraphRAG)]
-  S -->|action 调用| A[自定义 Action\n(MySQL)]
+  C["WebChat / REST"] -->|Socket.IO / HTTP| S["主服务<br/>FlowPolicy"]
+  S -->|检索 / 图查询| G["EnterpriseSearchPolicy<br/>(GraphRAG)"]
+  S -->|action 调用| A["自定义 Action<br/>(MySQL)"]
   G --> S
   A --> S
   S -->|响应| C

@@ -65,10 +65,10 @@
 
 ```mermaid
 flowchart LR
-  R[Rasa Pro\n- FlowPolicy\n- Enterprise Search\n- Rephraser]
-  A[自定义 Action Server\n(SQLAlchemy + MySQL)]
-  G[GraphRAG (Neo4j)\n- Hybrid Retriever\n- Cypher 生成/纠错\n- 自托管嵌入服务 FastAPI]
-  L[通义/Qwen API (LLM)\nDashScope Compatible]
+  R["Rasa Pro<br/>- FlowPolicy<br/>- Enterprise Search<br/>- Rephraser"]
+  A["自定义 Action Server<br/>(SQLAlchemy + MySQL)"]
+  G["GraphRAG (Neo4j)<br/>- Hybrid Retriever<br/>- Cypher 生成/纠错<br/>- 自托管嵌入服务 FastAPI"]
+  L["通义/Qwen API (LLM)<br/>DashScope Compatible"]
 
   R -->|slot/action 调用| A
   R -->|检索/图查询| G
