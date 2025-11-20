@@ -234,12 +234,16 @@ GraphRAG 流程摘自 `addons/information_retrieval.py`：
 ```mermaid
 flowchart TD
   C["WebChat / REST"] -->|Socket.IO / HTTP| S["Rasa Assistant<br/>(scripts/start-assistant.sh)"]
-  S --> FP["FlowPolicy<br/>解析 flows，决定下一步"]
-  S --> ESP["EnterpriseSearchPolicy (GraphRAG)<br/>information_retrieval.py<br/>依赖 Neo4j / embed_service / create_indexing"]
+  S --> FP["FlowPolicy<br/>读取 flows/*.yml，选择业务流程/下一步"]
+  S --> ESP["EnterpriseSearchPolicy (GraphRAG)<br/>information_retrieval.py<br/>入口节点检索 + Cypher 生成/校验 + Neo4j 查询"]
   S -->|HTTP webhook| AS["Action Server<br/>(scripts/start-actions.sh)"]
   AS --> ADB["actions/*.py<br/>MySQL 查询/写入"]
   AS -->|结构化结果| S
 ```
+
+- **FlowPolicy**：依据 `data/flows/*.yml` 的流程定义决定当前消息要走哪个业务流程、下一步收集哪种信息（槽位）、是否触发检索或调用 Action。
+- **EnterpriseSearchPolicy**：当流程需要搜索/知识问答时，执行 GraphRAG 链路——用入口节点/问题走向量+全文检索，生成/校验 Cypher，发到 Neo4j 获取结构化答案。
+- **Action Server**：当流程需要业务数据或写库时，通过 webhook 调用自定义 actions（MySQL 查询/更新等），返回结果再由主服务组织回复。
 
 - 若 LLM/API Key、嵌入服务或 Neo4j 未正确配置，`EnterpriseSearchPolicy` 会抛错并触发 `pattern_internal_error` Flow，用户看到的就是 “Sorry, I am having trouble with that...” 的兜底提示。请确保 `.env` 中的 `API_KEY` 为真实可用值、Neo4j 和嵌入服务已启动。
 
