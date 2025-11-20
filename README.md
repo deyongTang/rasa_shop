@@ -234,16 +234,22 @@ GraphRAG 流程摘自 `addons/information_retrieval.py`：
 ```mermaid
 flowchart TD
   C["WebChat / REST"] -->|Socket.IO / HTTP| S["Rasa Assistant<br/>(scripts/start-assistant.sh)"]
-  S --> FP["FlowPolicy<br/>读取 flows/*.yml，选择业务流程/下一步"]
-  S --> ESP["EnterpriseSearchPolicy (GraphRAG)<br/>information_retrieval.py<br/>入口节点检索 + Cypher 生成/校验 + Neo4j 查询"]
-  S -->|HTTP webhook| AS["Action Server<br/>(scripts/start-actions.sh)"]
+  S -->|消息入 Tracker| T["Tracker / Slots<br/>(对话状态)"]
+  T --> FP["FlowPolicy<br/>读取 flows/*.yml，决定下一步槽位/节点"]
+  FP -->|需要问答/检索| ESP["EnterpriseSearchPolicy (GraphRAG)<br/>入口节点检索 + Cypher 生成/校验 + Neo4j 查询"]
+  FP -->|需要业务数据/写库| AS["Action Server<br/>(scripts/start-actions.sh)"]
+  ESP -->|检索结果/Cypher 查询结果| T
   AS --> ADB["actions/*.py<br/>MySQL 查询/写入"]
-  AS -->|结构化结果| S
+  AS -->|结构化结果| T
+  T --> NLG["NLG / Rephraser"]
+  NLG -->|回复| C
 ```
 
-- **FlowPolicy**：依据 `data/flows/*.yml` 的流程定义决定当前消息要走哪个业务流程、下一步收集哪种信息（槽位）、是否触发检索或调用 Action。
-- **EnterpriseSearchPolicy**：当流程需要搜索/知识问答时，执行 GraphRAG 链路——用入口节点/问题走向量+全文检索，生成/校验 Cypher，发到 Neo4j 获取结构化答案。
-- **Action Server**：当流程需要业务数据或写库时，通过 webhook 调用自定义 actions（MySQL 查询/更新等），返回结果再由主服务组织回复。
+数据流转（对标 Rasa 官方链路）：
+- **FlowPolicy**：参考官方 Flow（对话引导）/Form 概念，用 `data/flows/*.yml` 控制每步收集什么槽位、何时分支或调用下游（检索/Action）。
+- **EnterpriseSearchPolicy**：当 Flow 需要知识检索/问答时进入 GraphRAG；执行入口节点检索、向量+全文检索、Cypher 生成/校验，再查 Neo4j，结果回填 Tracker。
+- **Action Server**：需要业务数据/写库时通过 HTTP webhook 调用自定义 actions（MySQL 查询/更新等），结果回填 Tracker。
+- **Tracker / NLG**：所有事件、槽位存 Tracker；最终用 NLG/Rephraser 生成回复，经 Socket.IO/REST 返回前端。同一次对话的上下文都留存在 Tracker 中，后续预测依赖这些历史。
 
 - 若 LLM/API Key、嵌入服务或 Neo4j 未正确配置，`EnterpriseSearchPolicy` 会抛错并触发 `pattern_internal_error` Flow，用户看到的就是 “Sorry, I am having trouble with that...” 的兜底提示。请确保 `.env` 中的 `API_KEY` 为真实可用值、Neo4j 和嵌入服务已启动。
 
