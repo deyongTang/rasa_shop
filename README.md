@@ -295,6 +295,49 @@ sequenceDiagram
 ### pattern_* 模式 Flow（知识库/闲聊/兜底）
 
 - Flow 定义：`data/flows/flow_patterns.yml`
+  - `pattern_search`（知识检索）：steps 只有 `action_trigger_search`（Rasa 内置，`rasa/core/actions/action_trigger_search.py`，作用是往 Tracker stack 推入搜索帧），当命令生成器判定需要检索时由 FlowPolicy 自动触发并交给 EnterpriseSearchPolicy 执行 GraphRAG。
+  - `pattern_chitchat`（闲聊）：steps `utter_chitchat_response`（定义在 `domain/domain_patterns.yml`）。
+  - `pattern_cannot_handle`：命令生成失败/无法处理时的兜底 `utter_cannot_handle`。
+- 配置入口：`config.yml` 启用 `FlowPolicy`、`EnterpriseSearchPolicy`（命令生成器 SearchReadyLLMCommandGenerator）；检索依赖 `endpoints.yml` 中的 `vector_store`/`embedding_models`。
+- 触发机制：命令生成器根据用户输入决定走业务 Flow 还是模式 Flow；当判定为知识问答且未匹配业务 Flow 时，进入 `pattern_search` 并由 EnterpriseSearchPolicy 执行 GraphRAG。
+- 实现位置：GraphRAG 逻辑在 `addons/information_retrieval.py`，索引构建在 `addons/create_indexing.py`，嵌入服务在 `addons/embed_service.py`。
+
+### 示例：order_id 收集与回显的完整交互流
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant FE as WebChat/REST
+    participant S as 主服务(FlowPolicy)
+    participant T as Tracker
+    participant A as Action Server
+
+    U->>FE: “查询订单详情”
+    FE->>S: 消息 (Socket.IO / HTTP)
+    S->>T: set_slots(goto=action_ask_order_id_before_completed_3_days)
+    S->>A: 调用 action_ask_order_id<br/>(collect:order_id → action_ask_order_id 约定)
+    A->>T: SlotSet(order_id=按钮payload 或 "false")
+    A->>U: 订单列表按钮（回显）
+    alt 用户选择订单
+      U->>S: /SetSlots(order_id=选定ID)
+      S->>T: 更新 order_id 槽
+      S->>A: action_get_order_detail 查询明细/物流
+      A->>U: 返回订单详情 + 最近物流
+    else 无订单或用户返回
+      T->>S: order_id="false"
+      S->>U: 结束/兜底
+    end
+```
+
+1. Flow 下发过滤标记：`flow_order.yml` 在 `query_order_detail` 开头 `set_slots: goto: action_ask_order_id_before_completed_3_days`，为查询设置过滤模式。
+2. Flow 收集槽：`collect: order_id` 触发命名约定 `action_ask_order_id`（在 `domain/domain_order.yml` 注册，槽 `order_id` 映射为 controlled），这是 Rasa 官方 `collect → action_ask_<slot>` 规则。
+3. Action 查询并回显：`actions/action_order.py` 的 `AskOrderID.run()` 读取 Tracker 中的 `user_id/goto`，通过 `SessionLocal` 查询 MySQL 的 `OrderInfo`/`OrderStatus`，生成按钮（`/SetSlots(order_id=...)`），用 `dispatcher.utter_message` 返回给前端，这一步就是数据“回显”。
+4. 槽回填与分支：用户点按钮后，`order_id` 槽被写入 Tracker；若查无订单，Action 会设置 `order_id="false"`。Flow 用 `if: slots.order_id != "false"` 决定是否继续。
+5. 详情查询与回复：后续步骤 `action_get_order_detail` 读取槽 `order_id`，联查明细/物流等并拼装文本；最终经 NLG/Rephraser 生成回复返回前端。整个对话上下文保存在 Tracker，供后续步骤和策略使用。
+
+### pattern_* 模式 Flow（知识库/闲聊/兜底）
+
+- Flow 定义：`data/flows/flow_patterns.yml`
   - `pattern_search`（知识检索）：steps 只有 `action_trigger_search`，在 EnterpriseSearchPolicy 判定需要检索时由 FlowPolicy 自动触发（无需自定义同名 Action）。
   - `pattern_chitchat`（闲聊）：steps `utter_chitchat_response`（定义在 `domain/domain_patterns.yml`）。
   - `pattern_cannot_handle`：命令生成失败/无法处理时的兜底 `utter_cannot_handle`。
